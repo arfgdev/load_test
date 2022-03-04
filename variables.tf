@@ -4,50 +4,60 @@ variable "region" {
   description = "AWS Region"
 }
 
+// Default AWS provider vars
+variable "profile" {
+  type        = string
+  description = "AWS profile"
+  default     = "default"
+}
+
+variable "bucket_name" {
+  type        = string
+  description = "AWS profile"
+  default     = "proxiesbuckettest1"
+}
+
+variable "deploy_bucket" {
+  type        = number
+  description = "1 if you need to deploy bucket"
+  default     =  0
+}
+
+
+
+
 variable "ami_id" {
   type        = string
   description = "AWS AMI"
 }
 
-variable "asg_name" {
+variable "name" {
   type        = string
-  description = "Auto Scaling Group name"
+  description = "deployment name"
 }
 
-variable "lc_name" {
+variable "instance_type" {
   type        = string
-  description = "Launch configuration name"
+  description = "Instance type"
+  default     = "t2.micro"
 }
 
-# variable "security_groups" {
-#     type = list(string)
-#     description = "Specify security group list"
-# }
+
 
 variable "max_size" {
-  type = number
-    description = "Max size of autoscale group"
+  type        = number
+  description = "Max size of autoscale group"
 }
 
 variable "min_size" {
-  type = number
-    description = "Min size of autoscale group"
+  type        = number
+  description = "Min size of autoscale group"
 }
 
-variable "vpc_zone" {
-  type = list(string)
-    description = "Specify subnet"
-}
-
-variable "key_name" {
-  type = string
-    description = "Specify SSH key for access to AWS instances"
-}
 
 // Mixed instances policy part
-
 variable "desired_capacity" {
-    type = number
-    description = ""
-  
+  type        = number
+  description = ""
+  default     = 30
 }
