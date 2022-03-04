@@ -165,7 +165,7 @@ resource "aws_launch_template" "example" {
   instance_initiated_shutdown_behavior = "terminate"
   instance_type                        = var.instance_type
   user_data                            = base64encode(<<EOF
-    #!/bin/bash -xe
+#!/bin/bash -xe
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
     yum update -y
     amazon-linux-extras install docker
@@ -202,7 +202,6 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
     do
       systemctl --force --force poweroff
     done
-
 
 EOF
   )
