@@ -174,7 +174,6 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
     chkconfig docker on
     docker run -it -d --restart always ghcr.io/arriven/db1000n ./main -c https://raw.githubusercontent.com/arfgdev/LoadTestConfig/main/config.json
 
-
 EOF
   )
   iam_instance_profile {
