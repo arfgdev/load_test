@@ -91,37 +91,37 @@ resource "aws_iam_role_policy" "role_policy" {
 }
 EOF
 }
-
-resource "aws_s3_bucket" "proxies_bucket" {
-  count         = var.deploy_bucket
-  force_destroy = true
-  bucket        = var.bucket_name
-}
-
-resource "aws_s3_bucket_object" "addresses" {
-  count  = var.deploy_bucket
-  key    = "addresses.txt"
-  bucket = var.bucket_name
-  source = "addresses.txt"
-  etag   = filemd5("addresses.txt")
-}
-
-resource "aws_s3_bucket_object" "proxies" {
-  count  = var.deploy_bucket
-  key    = "proxies.txt"
-  bucket = var.bucket_name
-  source = "proxies.txt"
-  etag   = filemd5("proxies.txt")
-}
+#
+#resource "aws_s3_bucket" "proxies_bucket" {
+#  count         = var.deploy_bucket
+#  force_destroy = true
+#  bucket        = var.bucket_name
+#}
+#
+#resource "aws_s3_bucket_object" "addresses" {
+#  count  = var.deploy_bucket
+#  key    = "addresses.txt"
+#  bucket = var.bucket_name
+#  source = "addresses.txt"
+#  etag   = filemd5("addresses.txt")
+#}
+#
+#resource "aws_s3_bucket_object" "proxies" {
+#  count  = var.deploy_bucket
+#  key    = "proxies.txt"
+#  bucket = var.bucket_name
+#  source = "proxies.txt"
+#  etag   = filemd5("proxies.txt")
+#}
 
 
 
 resource "aws_security_group" "instance_connect" {
   vpc_id      = aws_vpc.main.id
-  name_prefix = "instance_connect"
+  name_prefix = "instance_connect_egress_all"
   description = "allow ssh"
   ingress {
-    cidr_blocks      = ["0.0.0.0/0",]
+    cidr_blocks      = ["0.0.0.0/0"]
     description      = ""
     from_port        = 22
     ipv6_cidr_blocks = []
@@ -132,20 +132,19 @@ resource "aws_security_group" "instance_connect" {
     to_port          = 22
   }
   egress {
-    cidr_blocks      = ["0.0.0.0/0",]
-    description      = ""
     from_port        = 0
-    ipv6_cidr_blocks = []
-    prefix_list_ids  = []
-    protocol         = -1
-    security_groups  = []
-    self             = false
     to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 }
 
 resource "aws_internet_gateway" "test-env-gw" {
   vpc_id = aws_vpc.main.id
+  tags = {
+    Name = var.name
+  }
 }
 
 resource "aws_route_table" "route-table-test-env" {
@@ -172,7 +171,7 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
     service docker start
     usermod -a -G docker ec2-user
     chkconfig docker on
-    docker run -it -d --restart always ghcr.io/arriven/db1000n ./main -c https://raw.githubusercontent.com/arfgdev/LoadTestConfig/main/config.json
+#    docker run -it -d --restart always ghcr.io/arriven/db1000n ./main -c https://pastebin.com/raw/HxfGYtm3
 
 EOF
   )
